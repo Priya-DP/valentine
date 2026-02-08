@@ -1,3 +1,5 @@
+// Mobile Valentine's Page - Fully Functional for Mobile Devices
+
 // Get DOM elements
 const yesBtn = document.getElementById("yes-btn");
 const noBtn = document.getElementById("no-btn");
@@ -5,14 +7,54 @@ const questionState = document.getElementById("question-state");
 const celebrationState = document.getElementById("celebration-state");
 const heartsContainer = document.querySelector(".hearts-container");
 const romanticMusic = document.getElementById("romantic-music");
+const body = document.body;
+const content = document.getElementById("content");
 
-// Track if "No" button has been moved
-let noBtnMoved = false;
-let noButtonHoverCount = 0;
+// Track interaction state
+let noButtonClickCount = 0;
+let isMobile = false;
+let isYesClicked = false;
 
-// Create lots of hearts in background
+// Check if mobile device
+function checkIfMobile() {
+  return (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    ) ||
+    "ontouchstart" in window ||
+    navigator.maxTouchPoints > 0
+  );
+}
+
+// Initialize the page
+function init() {
+  isMobile = checkIfMobile();
+
+  // Add mobile class for CSS targeting
+  if (isMobile) {
+    document.body.classList.add("mobile-device");
+  }
+
+  // Create background hearts
+  createHeartsBackground();
+
+  // Setup event listeners
+  setupEventListeners();
+
+  // Add console message
+  console.log(
+    "%c💖 Will You Be My Valentine? 💖",
+    "color: #FF4081; font-size: 16px; font-weight: bold;",
+  );
+  console.log(
+    "%cMade with love for someone special!",
+    "color: #E040FB; font-size: 14px;",
+  );
+}
+
+// Create floating hearts in background
 function createHeartsBackground() {
-  const heartCount = 50;
+  const heartCount = isMobile ? 25 : 40;
 
   for (let i = 0; i < heartCount; i++) {
     setTimeout(() => {
@@ -25,14 +67,14 @@ function createHeartsBackground() {
       heart.style.top = Math.random() * 100 + "vh";
 
       // Random size
-      const size = Math.random() * 30 + 20;
+      const size = isMobile ? Math.random() * 15 + 12 : Math.random() * 20 + 15;
       heart.style.fontSize = size + "px";
 
       // Random animation duration
       const duration = Math.random() * 20 + 15;
       heart.style.animationDuration = duration + "s";
 
-      // Random color variation
+      // Random color
       const colors = ["#FF4081", "#E040FB", "#FF6B9D", "#D81B60"];
       const color = colors[Math.floor(Math.random() * colors.length)];
       heart.style.color = color;
@@ -41,87 +83,247 @@ function createHeartsBackground() {
       heart.style.opacity = Math.random() * 0.5 + 0.3;
 
       heartsContainer.appendChild(heart);
-    }, i * 100);
+    }, i * 150);
   }
 }
 
-// Function to get random position for the "No" button
-function getRandomPosition() {
-  const container = document.querySelector(".content");
-  const containerRect = container.getBoundingClientRect();
-  const btnRect = noBtn.getBoundingClientRect();
+// Setup all event listeners
+function setupEventListeners() {
+  // Yes button - primary click handler
+  yesBtn.addEventListener("click", handleYesClick);
 
-  // Calculate available space
-  const maxX = containerRect.width - btnRect.width - 40;
-  const maxY = containerRect.height - btnRect.height - 40;
+  // Mobile touch support for Yes button
+  if (isMobile) {
+    yesBtn.addEventListener(
+      "touchstart",
+      function (e) {
+        e.preventDefault();
+        // Add touch feedback
+        this.style.transform = "scale(0.95)";
+      },
+      { passive: false },
+    );
 
-  // Get random positions
-  const randomX = Math.random() * maxX + 20;
-  const randomY = Math.random() * maxY + 20;
+    yesBtn.addEventListener(
+      "touchend",
+      function (e) {
+        e.preventDefault();
+        this.style.transform = "scale(1)";
+        handleYesClick();
+      },
+      { passive: false },
+    );
+  }
 
-  return { x: randomX, y: randomY };
+  // No button handlers
+  if (isMobile) {
+    // Mobile: Touch to move
+    noBtn.addEventListener(
+      "touchstart",
+      function (e) {
+        e.preventDefault();
+        if (!isYesClicked) {
+          moveNoButton();
+          noButtonClickCount++;
+          updateNoButtonMessage();
+
+          // Visual feedback
+          this.classList.add("mobile-move");
+          setTimeout(() => {
+            this.classList.remove("mobile-move");
+          }, 300);
+        }
+      },
+      { passive: false },
+    );
+
+    noBtn.addEventListener(
+      "touchend",
+      function (e) {
+        e.preventDefault();
+        if (noButtonClickCount >= 10 && !isYesClicked) {
+          // After many tries, No button becomes Yes
+          this.innerHTML = '<i class="fas fa-heart"></i> OK, Yes!';
+          this.classList.remove("btn-no");
+          this.classList.add("btn-yes");
+          this.style.animation = "pulseYes 2s infinite";
+          this.removeEventListener("touchstart", arguments.callee);
+
+          // Change handler to Yes
+          this.addEventListener(
+            "touchend",
+            function (e) {
+              e.preventDefault();
+              handleYesClick();
+            },
+            { passive: false },
+          );
+        }
+      },
+      { passive: false },
+    );
+  } else {
+    // Desktop: Hover to move
+    noBtn.addEventListener("mouseenter", function () {
+      if (!isYesClicked) {
+        moveNoButton();
+        noButtonClickCount++;
+        updateNoButtonMessage();
+      }
+    });
+
+    noBtn.addEventListener("click", function () {
+      if (noButtonClickCount >= 10 && !isYesClicked) {
+        // After many tries, No button becomes Yes
+        this.innerHTML = '<i class="fas fa-heart"></i> OK, Yes!';
+        this.classList.remove("btn-no");
+        this.classList.add("btn-yes");
+        this.style.animation = "pulseYes 2s infinite";
+        this.removeEventListener("mouseenter", arguments.callee);
+
+        // Change handler to Yes
+        this.addEventListener("click", handleYesClick);
+      }
+    });
+  }
+
+  // Prevent context menu on buttons
+  yesBtn.addEventListener("contextmenu", (e) => e.preventDefault());
+  noBtn.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  // Handle page visibility changes
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 }
 
-// Function to move "No" button away from cursor
+// Move No button to random position
 function moveNoButton() {
-  if (!noBtnMoved) {
-    // Make button absolutely positioned on first move
-    noBtn.style.position = "absolute";
-    noBtnMoved = true;
+  if (isMobile) {
+    // On mobile, we'll move it within the flex container by swapping order
+    const buttons = document.querySelector(".buttons");
+    const currentOrder = parseInt(noBtn.style.order) || 2;
+    noBtn.style.order = currentOrder === 2 ? 1 : 2;
+  } else {
+    // Desktop: Move to random absolute position
+    if (!noBtn.classList.contains("desktop-move")) {
+      noBtn.classList.add("desktop-move");
+      noBtn.style.position = "absolute";
+      noBtn.style.margin = "0";
+    }
+
+    const container = questionState;
+    const containerRect = container.getBoundingClientRect();
+    const btnRect = noBtn.getBoundingClientRect();
+
+    const maxX = containerRect.width - btnRect.width - 40;
+    const maxY = containerRect.height - btnRect.height - 40;
+
+    const safeMaxX = Math.max(40, maxX);
+    const safeMaxY = Math.max(40, maxY);
+
+    const randomX = Math.random() * safeMaxX + 20;
+    const randomY = Math.random() * safeMaxY + 20;
+
+    noBtn.style.left = randomX + "px";
+    noBtn.style.top = randomY + "px";
+    noBtn.style.transform = "scale(0.9) rotate(5deg)";
+
+    setTimeout(() => {
+      noBtn.style.transform = "scale(1) rotate(0deg)";
+    }, 200);
   }
-
-  const newPos = getRandomPosition();
-  noBtn.style.left = newPos.x + "px";
-  noBtn.style.top = newPos.y + "px";
-
-  // Add a little wiggle animation
-  noBtn.style.transform = "scale(0.9) rotate(5deg)";
-  setTimeout(() => {
-    noBtn.style.transform = "scale(1) rotate(0deg)";
-  }, 150);
-
-  // Update hover count and change messages
-  noButtonHoverCount++;
-  updateNoButtonMessage();
 }
 
-// Update messages based on hover count
+// Update messages based on interaction
 function updateNoButtonMessage() {
   const title = document.querySelector("#question-state .title");
   const quotes = [
     "Will You Be My Valentine? 💝",
     "Please say yes! 🥺",
-    "Pretty please with a cherry on top? 🍒",
-    "I'll make you the happiest person! 😊",
-    "Think of all the fun we'll have! 🎉",
+    "Pretty please? 🍒",
+    "I'll make you so happy! 😊",
+    "Think of all the fun! 🎉",
     "You're my everything! 💕",
-    "I can't imagine Valentine's without you! 🌹",
-    "My heart is waiting for your yes! 💓",
-    "You're my dream come true! ✨",
-    "Let's make beautiful memories together! 📸",
+    "My heart is waiting! 💓",
+    "You're my dream! ✨",
+    "Let's make memories! 📸",
     "I'll cherish you forever! 💖",
-    "You're the love of my life! 💘",
+    "You make my world complete! 🌎",
+    "Say yes for endless cuddles! 🧸",
   ];
 
-  if (noButtonHoverCount > 0 && noButtonHoverCount <= quotes.length) {
+  const quoteIndex = Math.min(noButtonClickCount - 1, quotes.length - 1);
+
+  if (noButtonClickCount > 0 && quoteIndex >= 0) {
     title.innerHTML = `
-            <span class="title-line">My Dearest Love,</span>
-            <span class="title-line">${quotes[noButtonHoverCount - 1]}</span>
+            <span class="title-line">Dear Kumaran ❤️,</span>
+            <span class="title-line">${quotes[quoteIndex]}</span>
             <span class="title-line">💝 Forever and Always 💝</span>
         `;
   }
 
-  // Change button text after many attempts
-  if (noButtonHoverCount === 15) {
+  // Update No button text
+  if (noButtonClickCount === 5) {
     noBtn.innerHTML = '<i class="fas fa-heart-broken"></i> Maybe?';
   }
-
-  if (noButtonHoverCount === 25) {
-    noBtn.innerHTML = '<i class="fas fa-heart-broken"></i> Think about it?';
+  if (noButtonClickCount === 8) {
+    noBtn.innerHTML = '<i class="fas fa-heart"></i> Think about it?';
   }
 }
 
-// Function to create romantic confetti
+// Handle Yes button click
+function handleYesClick() {
+  if (isYesClicked) return;
+  isYesClicked = true;
+
+  // Play romantic music if user has interacted
+  if (romanticMusic) {
+    romanticMusic.volume = 0.2;
+    const playPromise = romanticMusic.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Auto-play was prevented, we'll handle it on user interaction
+      });
+    }
+  }
+
+  // Create celebration effects
+  createConfetti();
+
+  // Add visual feedback
+  yesBtn.style.transform = "scale(1.1)";
+  yesBtn.style.boxShadow = "0 0 50px rgba(255, 64, 129, 0.8)";
+
+  // Switch to celebration state
+  setTimeout(() => {
+    questionState.classList.remove("active");
+    celebrationState.classList.add("active");
+
+    // Lock body scroll on mobile during celebration
+    if (isMobile) {
+      body.classList.add("mobile-scroll-lock");
+    }
+
+    // Scroll to top of celebration content
+    const celebrationContainer = document.querySelector(
+      ".celebration-container",
+    );
+    if (celebrationContainer) {
+      celebrationContainer.scrollTop = 0;
+    }
+
+    // Add sparkle effect to container
+    const container = document.querySelector(".romantic-border");
+    container.style.boxShadow =
+      "0 20px 80px rgba(255, 64, 129, 0.5), " +
+      "0 0 60px rgba(255, 215, 0, 0.4), " +
+      "inset 0 0 40px rgba(255, 255, 255, 0.9)";
+
+    // Add floating celebration elements
+    createCelebrationHearts();
+  }, 500);
+}
+
+// Create confetti celebration
 function createConfetti() {
   const colors = [
     "#FF4081",
@@ -131,18 +333,18 @@ function createConfetti() {
     "#FF1744",
     "#D81B60",
   ];
-  const confettiCount = 100;
+  const confettiCount = isMobile ? 60 : 100;
 
   for (let i = 0; i < confettiCount; i++) {
     setTimeout(() => {
       const confetti = document.createElement("div");
       confetti.className = "confetti";
       confetti.style.left = Math.random() * 100 + "vw";
-      confetti.style.top = "-10px";
+      confetti.style.top = "-20px";
       confetti.style.background =
         colors[Math.floor(Math.random() * colors.length)];
-      confetti.style.width = Math.random() * 15 + 10 + "px";
-      confetti.style.height = Math.random() * 15 + 10 + "px";
+      confetti.style.width = Math.random() * 12 + 8 + "px";
+      confetti.style.height = Math.random() * 12 + 8 + "px";
       confetti.style.borderRadius = Math.random() > 0.5 ? "50%" : "0";
       confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
       confetti.style.animationDelay = Math.random() * 0.5 + "s";
@@ -150,52 +352,51 @@ function createConfetti() {
 
       document.body.appendChild(confetti);
 
-      // Remove confetti after animation
+      // Remove after animation
       setTimeout(() => {
-        confetti.remove();
+        if (confetti.parentNode) {
+          confetti.remove();
+        }
       }, 3000);
-    }, i * 20);
+    }, i * 30);
   }
 }
 
-// Function to create floating hearts celebration
-function createFloatingHearts() {
-  const heartCount = 30;
+// Create floating hearts for celebration
+function createCelebrationHearts() {
+  const heartCount = 20;
 
   for (let i = 0; i < heartCount; i++) {
     setTimeout(() => {
       const heart = document.createElement("div");
-      heart.className = "heart-celebration";
-      heart.innerHTML = '<i class="fas fa-heart"></i>';
       heart.style.position = "fixed";
       heart.style.left = Math.random() * 100 + "vw";
       heart.style.top = "100vh";
-      heart.style.fontSize = Math.random() * 40 + 20 + "px";
-      heart.style.color = ["#FF4081", "#E040FB", "#FF6B9D"][
-        Math.floor(Math.random() * 3)
-      ];
+      heart.style.fontSize = Math.random() * 30 + 20 + "px";
+      heart.innerHTML = "💖";
+      heart.style.color = ["#FF4081", "#E040FB"][Math.floor(Math.random() * 2)];
       heart.style.opacity = "0.9";
       heart.style.zIndex = "1000";
       heart.style.pointerEvents = "none";
-
-      // Animation
-      heart.style.animation = `heartCelebration ${Math.random() * 3 + 2}s ease-out forwards`;
+      heart.style.animation = `floatUp ${Math.random() * 3 + 2}s ease-out forwards`;
 
       document.body.appendChild(heart);
 
       // Remove after animation
       setTimeout(() => {
-        heart.remove();
+        if (heart.parentNode) {
+          heart.remove();
+        }
       }, 3000);
-    }, i * 100);
+    }, i * 150);
   }
 
-  // Add CSS for animation
-  if (!document.querySelector("#heartCelebrationStyle")) {
+  // Add the animation keyframes if not already present
+  if (!document.querySelector("#floatUpAnimation")) {
     const style = document.createElement("style");
-    style.id = "heartCelebrationStyle";
+    style.id = "floatUpAnimation";
     style.textContent = `
-            @keyframes heartCelebration {
+            @keyframes floatUp {
                 0% {
                     transform: translateY(0) rotate(0deg);
                     opacity: 1;
@@ -210,156 +411,61 @@ function createFloatingHearts() {
   }
 }
 
-// Function to handle "Yes" button click
-function handleYesClick() {
-  // Play romantic music (optional)
+// Handle page visibility changes
+function handleVisibilityChange() {
+  if (document.hidden && romanticMusic) {
+    romanticMusic.pause();
+  } else if (!document.hidden && isYesClicked && romanticMusic) {
+    romanticMusic.play().catch(() => {
+      // Ignore auto-play errors
+    });
+  }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener("DOMContentLoaded", init);
+
+// Handle page unload
+window.addEventListener("beforeunload", function () {
   if (romanticMusic) {
-    romanticMusic.volume = 0.5;
-    romanticMusic.play().catch((e) => console.log("Autoplay prevented:", e));
-  }
-
-  // Create celebration effects
-  createConfetti();
-  createFloatingHearts();
-
-  // Add sparkle effect to the container
-  const container = document.querySelector(".romantic-border");
-  container.style.boxShadow =
-    "0 20px 80px rgba(255, 64, 129, 0.5), " +
-    "0 0 60px rgba(255, 215, 0, 0.4), " +
-    "inset 0 0 40px rgba(255, 255, 255, 0.9)";
-
-  // Switch states with delay
-  setTimeout(() => {
-    questionState.classList.remove("active");
-    celebrationState.classList.add("active");
-
-    // Add pulsing animation to celebration title
-    const celebrationTitle = document.querySelector(".celebration-title");
-    celebrationTitle.style.animation = "celebrate 1s ease-in-out infinite";
-  }, 500);
-}
-
-// Function to handle "No" button click (after many attempts)
-function handleNoClick() {
-  if (noButtonHoverCount > 30) {
-    questionState.classList.remove("active");
-
-    // Create a "that's okay" state
-    const content = document.querySelector(".content");
-    content.innerHTML = `
-            <div class="state active">
-                <div class="title-wrapper">
-                    <h1 class="title">
-                        <span class="title-line">That's Okay, My Love</span>
-                        <span class="title-line">You'll Always Have My Heart 💙</span>
-                    </h1>
-                </div>
-                <div class="gif-container">
-                    <img src="https://media.giphy.com/media/ZBQhoZC0nqknSviPqT/giphy.gif" 
-                         alt="Understanding hug" 
-                         class="gif">
-                </div>
-                <div class="romantic-message">
-                    <p class="love-quote">"My love for you is unconditional and endless."</p>
-                    <p class="promise">No matter what, I'll always care for you and cherish our connection. Hope we can still share beautiful moments together! 😊💕</p>
-                </div>
-                <div class="romantic-footer">
-                    <p>You mean the world to me, always and forever.</p>
-                </div>
-            </div>
-        `;
-  }
-}
-
-// Event listeners for "No" button evasion
-noBtn.addEventListener("mouseenter", moveNoButton);
-noBtn.addEventListener("touchstart", (e) => {
-  e.preventDefault();
-  moveNoButton();
-});
-
-// Event listener for "Yes" button
-yesBtn.addEventListener("click", handleYesClick);
-
-// Event listener for "No" button click
-noBtn.addEventListener("click", handleNoClick);
-
-// Add keyboard support for accessibility
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && questionState.classList.contains("active")) {
-    handleYesClick();
-  }
-
-  // Spacebar can also trigger "Yes"
-  if (e.key === " " && questionState.classList.contains("active")) {
-    e.preventDefault();
-    handleYesClick();
+    romanticMusic.pause();
+    romanticMusic.currentTime = 0;
   }
 });
 
-// Initialize background hearts when page loads
-window.addEventListener("DOMContentLoaded", () => {
-  createHeartsBackground();
-
-  // Add romantic message to console
-  console.log(
-    "%c💖 For the most amazing person in my life 💖",
-    "color: #FF4081; font-size: 18px; font-weight: bold;",
-  );
-  console.log(
-    "%cYou make every day brighter and more beautiful!",
-    "color: #E040FB; font-size: 14px;",
-  );
-});
-
-// Make hearts responsive on resize
-window.addEventListener("resize", () => {
-  // Hearts will reposition automatically with CSS
-});
-
-// Add a romantic touch to the tab title
-let originalTitle = document.title;
-let isBlinking = false;
-
-function blinkTitle() {
-  if (isBlinking) return;
-
-  isBlinking = true;
-  let blinkCount = 0;
-  const maxBlinks = 10;
-
-  const blinkInterval = setInterval(() => {
-    document.title = blinkCount % 2 === 0 ? "💝 SAY YES! 💝" : originalTitle;
-    blinkCount++;
-
-    if (blinkCount > maxBlinks * 2) {
-      clearInterval(blinkInterval);
-      document.title = originalTitle;
-      isBlinking = false;
+// Handle window resize
+let resizeTimeout;
+window.addEventListener("resize", function () {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(function () {
+    // Reset No button position on resize
+    if (!isMobile && noBtn.classList.contains("desktop-move")) {
+      moveNoButton();
     }
-  }, 500);
-}
-
-// Blink title when user tries to leave
-window.addEventListener("beforeunload", () => {
-  if (questionState.classList.contains("active")) {
-    return "Wait! Don't go without answering! 💕";
-  }
+  }, 250);
 });
 
-// Blink title when user is inactive for a while
-let inactivityTimer;
-function resetInactivityTimer() {
-  clearTimeout(inactivityTimer);
-  inactivityTimer = setTimeout(() => {
-    if (questionState.classList.contains("active") && !isBlinking) {
-      blinkTitle();
+// Add touch support for celebration scrolling
+document.addEventListener(
+  "touchstart",
+  function (e) {
+    // Allow touch scrolling in celebration container
+    const celebrationContainer = document.querySelector(
+      ".celebration-container",
+    );
+    if (celebrationContainer && celebrationContainer.contains(e.target)) {
+      e.stopPropagation();
     }
-  }, 30000); // 30 seconds
-}
+  },
+  { passive: true },
+);
 
-// Reset timer on user activity
-document.addEventListener("mousemove", resetInactivityTimer);
-document.addEventListener("keypress", resetInactivityTimer);
-resetInactivityTimer();
+// Keyboard support for accessibility
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" || e.key === " ") {
+    if (questionState.classList.contains("active") && !isYesClicked) {
+      e.preventDefault();
+      handleYesClick();
+    }
+  }
+});
