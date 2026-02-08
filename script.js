@@ -1,4 +1,4 @@
-// Mobile Valentine's Page - Fully Functional for Mobile Devices
+// Mobile Valentine's Page with Custom Image
 
 // Get DOM elements
 const yesBtn = document.getElementById("yes-btn");
@@ -8,12 +8,22 @@ const celebrationState = document.getElementById("celebration-state");
 const heartsContainer = document.querySelector(".hearts-container");
 const romanticMusic = document.getElementById("romantic-music");
 const body = document.body;
-const content = document.getElementById("content");
+const customImage = document.getElementById("custom-image");
 
 // Track interaction state
 let noButtonClickCount = 0;
 let isMobile = false;
 let isYesClicked = false;
+
+// Your custom image configuration
+const customImageConfig = {
+  // Change this path to your custom image
+  imagePath: "images/kumaran.jpeg", // Your image path here
+
+  // Fallback image if custom image doesn't load
+  fallbackImage:
+    "https://images.unsplash.com/photo-1518568814500-bf0f8d125f46?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+};
 
 // Check if mobile device
 function checkIfMobile() {
@@ -35,6 +45,9 @@ function init() {
     document.body.classList.add("mobile-device");
   }
 
+  // Setup custom image
+  setupCustomImage();
+
   // Create background hearts
   createHeartsBackground();
 
@@ -50,6 +63,28 @@ function init() {
     "%cMade with love for someone special!",
     "color: #E040FB; font-size: 14px;",
   );
+}
+
+// Setup custom image with fallback
+function setupCustomImage() {
+  if (customImage) {
+    // Set the custom image
+    customImage.src = customImageConfig.imagePath;
+
+    // Add error handling for image
+    customImage.onerror = function () {
+      console.log("Custom image not found, using fallback");
+      this.src = customImageConfig.fallbackImage;
+      this.alt = "Our Special Moment Together";
+    };
+
+    // Add load event
+    customImage.onload = function () {
+      console.log("Custom image loaded successfully");
+      this.style.opacity = "1";
+      this.style.transform = "scale(1)";
+    };
+  }
 }
 
 // Create floating hearts in background
@@ -141,7 +176,7 @@ function setupEventListeners() {
       "touchend",
       function (e) {
         e.preventDefault();
-        if (noButtonClickCount >= 10 && !isYesClicked) {
+        if (noButtonClickCount >= 8 && !isYesClicked) {
           // After many tries, No button becomes Yes
           this.innerHTML = '<i class="fas fa-heart"></i> OK, Yes!';
           this.classList.remove("btn-no");
@@ -173,7 +208,7 @@ function setupEventListeners() {
     });
 
     noBtn.addEventListener("click", function () {
-      if (noButtonClickCount >= 10 && !isYesClicked) {
+      if (noButtonClickCount >= 8 && !isYesClicked) {
         // After many tries, No button becomes Yes
         this.innerHTML = '<i class="fas fa-heart"></i> OK, Yes!';
         this.classList.remove("btn-no");
@@ -193,13 +228,15 @@ function setupEventListeners() {
 
   // Handle page visibility changes
   document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  // Add keyboard support
+  document.addEventListener("keydown", handleKeyDown);
 }
 
 // Move No button to random position
 function moveNoButton() {
   if (isMobile) {
     // On mobile, we'll move it within the flex container by swapping order
-    const buttons = document.querySelector(".buttons");
     const currentOrder = parseInt(noBtn.style.order) || 2;
     noBtn.style.order = currentOrder === 2 ? 1 : 2;
   } else {
@@ -255,17 +292,17 @@ function updateNoButtonMessage() {
 
   if (noButtonClickCount > 0 && quoteIndex >= 0) {
     title.innerHTML = `
-            <span class="title-line">Dear Kumaran ❤️,</span>
-            <span class="title-line">${quotes[quoteIndex]}</span>
-            <span class="title-line">💝 Forever and Always 💝</span>
-        `;
+      <span class="title-line">Dear Kumaran ❤️,</span>
+      <span class="title-line">${quotes[quoteIndex]}</span>
+      <span class="title-line">💝 Forever and Always 💝</span>
+    `;
   }
 
   // Update No button text
-  if (noButtonClickCount === 5) {
+  if (noButtonClickCount === 4) {
     noBtn.innerHTML = '<i class="fas fa-heart-broken"></i> Maybe?';
   }
-  if (noButtonClickCount === 8) {
+  if (noButtonClickCount === 6) {
     noBtn.innerHTML = '<i class="fas fa-heart"></i> Think about it?';
   }
 }
@@ -320,6 +357,11 @@ function handleYesClick() {
 
     // Add floating celebration elements
     createCelebrationHearts();
+
+    // Animate custom image entrance
+    if (customImage) {
+      customImage.style.animation = "imageFloat 3s ease-in-out infinite";
+    }
   }, 500);
 }
 
@@ -396,17 +438,17 @@ function createCelebrationHearts() {
     const style = document.createElement("style");
     style.id = "floatUpAnimation";
     style.textContent = `
-            @keyframes floatUp {
-                0% {
-                    transform: translateY(0) rotate(0deg);
-                    opacity: 1;
-                }
-                100% {
-                    transform: translateY(-100vh) rotate(360deg);
-                    opacity: 0;
-                }
-            }
-        `;
+      @keyframes floatUp {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100vh) rotate(360deg);
+          opacity: 0;
+        }
+      }
+    `;
     document.head.appendChild(style);
   }
 }
@@ -419,6 +461,16 @@ function handleVisibilityChange() {
     romanticMusic.play().catch(() => {
       // Ignore auto-play errors
     });
+  }
+}
+
+// Handle keyboard input
+function handleKeyDown(e) {
+  if (e.key === "Enter" || e.key === " ") {
+    if (questionState.classList.contains("active") && !isYesClicked) {
+      e.preventDefault();
+      handleYesClick();
+    }
   }
 }
 
@@ -460,12 +512,12 @@ document.addEventListener(
   { passive: true },
 );
 
-// Keyboard support for accessibility
-document.addEventListener("keydown", function (e) {
-  if (e.key === "Enter" || e.key === " ") {
-    if (questionState.classList.contains("active") && !isYesClicked) {
-      e.preventDefault();
-      handleYesClick();
-    }
-  }
-});
+// Image loading helper
+function preloadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(url);
+    img.onerror = reject;
+    img.src = url;
+  });
+}

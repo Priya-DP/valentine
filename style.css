@@ -317,6 +317,61 @@ body.mobile-scroll-lock {
   }
 }
 
+/* Custom Image Section */
+.custom-image-section {
+  margin: 30px 0;
+  animation: fadeIn 1s ease-out;
+}
+
+.custom-image-container {
+  position: relative;
+  margin: 20px 0;
+}
+
+.custom-image {
+  max-width: 100%;
+  width: 350px;
+  height: auto;
+  border-radius: 20px;
+  box-shadow:
+    0 15px 40px rgba(255, 64, 129, 0.4),
+    0 0 30px rgba(255, 215, 0, 0.2);
+  border: 8px solid var(--white);
+  animation: imageFloat 3s ease-in-out infinite;
+  display: block;
+  margin: 0 auto;
+}
+
+@keyframes imageFloat {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.02);
+  }
+}
+
+.image-caption {
+  font-family: "Dancing Script", cursive;
+  font-size: 1.8rem;
+  color: var(--dark-pink);
+  margin-top: 15px;
+  text-shadow: 0 0 10px rgba(255, 64, 129, 0.3);
+  animation: captionGlow 2s infinite alternate;
+}
+
+@keyframes captionGlow {
+  0% {
+    color: var(--dark-pink);
+    transform: scale(1);
+  }
+  100% {
+    color: var(--red-accent);
+    transform: scale(1.05);
+  }
+}
+
 /* Buttons - Mobile Optimized */
 .buttons {
   display: flex;
@@ -756,11 +811,6 @@ body.mobile-scroll-lock {
   }
 }
 
-/* Floating Love Note - Hidden on mobile */
-.floating-note {
-  display: none;
-}
-
 /* Confetti Effect */
 @keyframes confetti-fall {
   0% {
@@ -856,6 +906,14 @@ body.mobile-scroll-lock {
     width: 350px;
   }
 
+  .custom-image {
+    width: 400px;
+  }
+
+  .image-caption {
+    font-size: 2.2rem;
+  }
+
   .celebration-title {
     font-size: 2.8rem;
   }
@@ -898,49 +956,6 @@ body.mobile-scroll-lock {
     font-size: 36px;
   }
 
-  .floating-note {
-    display: block;
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 15px;
-    padding: 15px;
-    box-shadow: 0 10px 30px rgba(255, 107, 157, 0.3);
-    border: 2px solid var(--pink-medium);
-    z-index: 10;
-    animation: floatNote 6s infinite ease-in-out;
-    max-width: 220px;
-  }
-
-  @keyframes floatNote {
-    0%,
-    100% {
-      transform: translateY(0) rotate(-2deg);
-    }
-    50% {
-      transform: translateY(-15px) rotate(2deg);
-    }
-  }
-
-  .note-content {
-    text-align: center;
-    position: relative;
-  }
-
-  .note-heart {
-    font-size: 25px;
-    color: var(--red-accent);
-    margin-bottom: 8px;
-    animation: heartbeat 1.2s infinite;
-  }
-
-  .note-content p {
-    font-family: "Dancing Script", cursive;
-    font-size: 1.2rem;
-    color: var(--dark-pink);
-  }
-
   .celebration-container {
     max-height: 70vh;
   }
@@ -965,6 +980,10 @@ body.mobile-scroll-lock {
     width: 300px;
   }
 
+  .custom-image {
+    width: 350px;
+  }
+
   .celebration-container {
     max-height: 65vh;
   }
@@ -984,6 +1003,14 @@ body.mobile-scroll-lock {
 
   .gif {
     width: 280px;
+  }
+
+  .custom-image {
+    width: 280px;
+  }
+
+  .image-caption {
+    font-size: 1.6rem;
   }
 
   .romantic-border {
