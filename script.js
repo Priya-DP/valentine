@@ -1,4 +1,4 @@
-// Mobile Valentine's Page with Custom Image
+// Mobile Valentine's Page with Custom Image - No Button Hides Inside Container
 
 // Get DOM elements
 const yesBtn = document.getElementById("yes-btn");
@@ -15,12 +15,8 @@ let noButtonClickCount = 0;
 let isMobile = false;
 let isYesClicked = false;
 
-// Your custom image configuration
 const customImageConfig = {
-  // Change this path to your custom image
-  imagePath: "images/kumaran.jpeg", // Your image path here
-
-  // Fallback image if custom image doesn't load
+  imagePath: "./images/kumaran.jpeg",
   fallbackImage:
     "https://images.unsplash.com/photo-1518568814500-bf0f8d125f46?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
 };
@@ -29,7 +25,7 @@ const customImageConfig = {
 function checkIfMobile() {
   return (
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent,
+      navigator.userAgent
     ) ||
     "ontouchstart" in window ||
     navigator.maxTouchPoints > 0
@@ -40,45 +36,31 @@ function checkIfMobile() {
 function init() {
   isMobile = checkIfMobile();
 
-  // Add mobile class for CSS targeting
   if (isMobile) {
     document.body.classList.add("mobile-device");
   }
 
-  // Setup custom image
   setupCustomImage();
-
-  // Create background hearts
   createHeartsBackground();
-
-  // Setup event listeners
   setupEventListeners();
 
-  // Add console message
   console.log(
     "%c💖 Will You Be My Valentine? 💖",
-    "color: #FF4081; font-size: 16px; font-weight: bold;",
-  );
-  console.log(
-    "%cMade with love for someone special!",
-    "color: #E040FB; font-size: 14px;",
+    "color: #FF4081; font-size: 16px; font-weight: bold;"
   );
 }
 
 // Setup custom image with fallback
 function setupCustomImage() {
   if (customImage) {
-    // Set the custom image
     customImage.src = customImageConfig.imagePath;
 
-    // Add error handling for image
     customImage.onerror = function () {
       console.log("Custom image not found, using fallback");
       this.src = customImageConfig.fallbackImage;
       this.alt = "Our Special Moment Together";
     };
 
-    // Add load event
     customImage.onload = function () {
       console.log("Custom image loaded successfully");
       this.style.opacity = "1";
@@ -97,24 +79,19 @@ function createHeartsBackground() {
       heart.className = "heart-bg";
       heart.innerHTML = '<i class="fas fa-heart"></i>';
 
-      // Random position
       heart.style.left = Math.random() * 100 + "vw";
       heart.style.top = Math.random() * 100 + "vh";
 
-      // Random size
       const size = isMobile ? Math.random() * 15 + 12 : Math.random() * 20 + 15;
       heart.style.fontSize = size + "px";
 
-      // Random animation duration
       const duration = Math.random() * 20 + 15;
       heart.style.animationDuration = duration + "s";
 
-      // Random color
       const colors = ["#FF4081", "#E040FB", "#FF6B9D", "#D81B60"];
       const color = colors[Math.floor(Math.random() * colors.length)];
       heart.style.color = color;
 
-      // Random opacity
       heart.style.opacity = Math.random() * 0.5 + 0.3;
 
       heartsContainer.appendChild(heart);
@@ -124,19 +101,16 @@ function createHeartsBackground() {
 
 // Setup all event listeners
 function setupEventListeners() {
-  // Yes button - primary click handler
   yesBtn.addEventListener("click", handleYesClick);
 
-  // Mobile touch support for Yes button
   if (isMobile) {
     yesBtn.addEventListener(
       "touchstart",
       function (e) {
         e.preventDefault();
-        // Add touch feedback
         this.style.transform = "scale(0.95)";
       },
-      { passive: false },
+      { passive: false }
     );
 
     yesBtn.addEventListener(
@@ -146,127 +120,110 @@ function setupEventListeners() {
         this.style.transform = "scale(1)";
         handleYesClick();
       },
-      { passive: false },
+      { passive: false }
     );
   }
 
-  // No button handlers
+  // ============================================
+  // NO BUTTON - HIDES INSIDE CONTAINER WHEN CLICKED
+  // ============================================
+  noBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    if (!isYesClicked) {
+      hideNoButtonInsideContainer();
+      noButtonClickCount++;
+      updateNoButtonMessage();
+
+      // After 3 clicks, No button becomes Yes
+      if (noButtonClickCount >= 3) {
+        setTimeout(() => {
+          this.innerHTML = '<i class="fas fa-heart"></i> OK, Yes! 💖';
+          this.classList.remove("btn-no");
+          this.classList.add("btn-yes");
+          this.style.animation = "pulseYes 2s infinite";
+
+          // Change handler to Yes
+          this.removeEventListener("click", arguments.callee);
+          this.addEventListener("click", handleYesClick);
+        }, 300);
+      }
+    }
+  });
+
+  // Mobile touch support for No button
   if (isMobile) {
-    // Mobile: Touch to move
     noBtn.addEventListener(
       "touchstart",
       function (e) {
         e.preventDefault();
         if (!isYesClicked) {
-          moveNoButton();
-          noButtonClickCount++;
-          updateNoButtonMessage();
-
-          // Visual feedback
           this.classList.add("mobile-move");
-          setTimeout(() => {
-            this.classList.remove("mobile-move");
-          }, 300);
         }
       },
-      { passive: false },
+      { passive: false }
     );
 
     noBtn.addEventListener(
       "touchend",
       function (e) {
         e.preventDefault();
-        if (noButtonClickCount >= 8 && !isYesClicked) {
-          // After many tries, No button becomes Yes
-          this.innerHTML = '<i class="fas fa-heart"></i> OK, Yes!';
-          this.classList.remove("btn-no");
-          this.classList.add("btn-yes");
-          this.style.animation = "pulseYes 2s infinite";
-          this.removeEventListener("touchstart", arguments.callee);
-
-          // Change handler to Yes
-          this.addEventListener(
-            "touchend",
-            function (e) {
-              e.preventDefault();
-              handleYesClick();
-            },
-            { passive: false },
-          );
-        }
+        this.classList.remove("mobile-move");
       },
-      { passive: false },
+      { passive: false }
     );
-  } else {
-    // Desktop: Hover to move
-    noBtn.addEventListener("mouseenter", function () {
-      if (!isYesClicked) {
-        moveNoButton();
-        noButtonClickCount++;
-        updateNoButtonMessage();
-      }
-    });
-
-    noBtn.addEventListener("click", function () {
-      if (noButtonClickCount >= 8 && !isYesClicked) {
-        // After many tries, No button becomes Yes
-        this.innerHTML = '<i class="fas fa-heart"></i> OK, Yes!';
-        this.classList.remove("btn-no");
-        this.classList.add("btn-yes");
-        this.style.animation = "pulseYes 2s infinite";
-        this.removeEventListener("mouseenter", arguments.callee);
-
-        // Change handler to Yes
-        this.addEventListener("click", handleYesClick);
-      }
-    });
   }
 
-  // Prevent context menu on buttons
   yesBtn.addEventListener("contextmenu", (e) => e.preventDefault());
   noBtn.addEventListener("contextmenu", (e) => e.preventDefault());
 
-  // Handle page visibility changes
   document.addEventListener("visibilitychange", handleVisibilityChange);
-
-  // Add keyboard support
   document.addEventListener("keydown", handleKeyDown);
 }
 
-// Move No button to random position
-function moveNoButton() {
-  if (isMobile) {
-    // On mobile, we'll move it within the flex container by swapping order
-    const currentOrder = parseInt(noBtn.style.order) || 2;
-    noBtn.style.order = currentOrder === 2 ? 1 : 2;
-  } else {
-    // Desktop: Move to random absolute position
-    if (!noBtn.classList.contains("desktop-move")) {
-      noBtn.classList.add("desktop-move");
+// ============================================
+// MAIN FUNCTION: HIDE NO BUTTON INSIDE CONTAINER
+// ============================================
+function hideNoButtonInsideContainer() {
+  // Add the hidden-inside class to make it disappear inside the container
+  noBtn.classList.add("hidden-inside");
+
+  // After a short delay, bring it back but make it harder to find
+  setTimeout(() => {
+    if (!isYesClicked && noButtonClickCount < 3) {
+      noBtn.classList.remove("hidden-inside");
+
+      // Make it move to a random position within the container
+      const container = document.querySelector(".romantic-border");
+      const containerRect = container.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+
+      // Set position absolute for random placement
       noBtn.style.position = "absolute";
       noBtn.style.margin = "0";
+
+      // Calculate safe boundaries
+      const padding = 20;
+      const maxX = containerRect.width - btnRect.width - padding;
+      const maxY = containerRect.height - btnRect.height - padding;
+
+      // Random position within container
+      const randomX = Math.max(padding, Math.min(maxX, Math.random() * maxX));
+      const randomY = Math.max(padding, Math.min(maxY, Math.random() * maxY));
+
+      noBtn.style.left = randomX + "px";
+      noBtn.style.top = randomY + "px";
+
+      // Add a little shake animation
+      noBtn.style.animation = "shake 0.5s ease-in-out";
+      setTimeout(() => {
+        noBtn.style.animation = "";
+      }, 500);
     }
+  }, 400);
 
-    const container = questionState;
-    const containerRect = container.getBoundingClientRect();
-    const btnRect = noBtn.getBoundingClientRect();
-
-    const maxX = containerRect.width - btnRect.width - 40;
-    const maxY = containerRect.height - btnRect.height - 40;
-
-    const safeMaxX = Math.max(40, maxX);
-    const safeMaxY = Math.max(40, maxY);
-
-    const randomX = Math.random() * safeMaxX + 20;
-    const randomY = Math.random() * safeMaxY + 20;
-
-    noBtn.style.left = randomX + "px";
-    noBtn.style.top = randomY + "px";
-    noBtn.style.transform = "scale(0.9) rotate(5deg)";
-
-    setTimeout(() => {
-      noBtn.style.transform = "scale(1) rotate(0deg)";
-    }, 200);
+  // On third click, transform the button
+  if (noButtonClickCount >= 2) {
+    noBtn.classList.remove("hidden-inside");
   }
 }
 
@@ -277,18 +234,12 @@ function updateNoButtonMessage() {
     "Will You Be My Valentine? 💝",
     "Please say yes! 🥺",
     "Pretty please? 🍒",
-    "I'll make you so happy! 😊",
-    "Think of all the fun! 🎉",
     "You're my everything! 💕",
     "My heart is waiting! 💓",
     "You're my dream! ✨",
-    "Let's make memories! 📸",
-    "I'll cherish you forever! 💖",
-    "You make my world complete! 🌎",
-    "Say yes for endless cuddles! 🧸",
   ];
 
-  const quoteIndex = Math.min(noButtonClickCount - 1, quotes.length - 1);
+  const quoteIndex = Math.min(noButtonClickCount, quotes.length - 1);
 
   if (noButtonClickCount > 0 && quoteIndex >= 0) {
     title.innerHTML = `
@@ -298,12 +249,12 @@ function updateNoButtonMessage() {
     `;
   }
 
-  // Update No button text
-  if (noButtonClickCount === 4) {
-    noBtn.innerHTML = '<i class="fas fa-heart-broken"></i> Maybe?';
+  // Update No button text based on clicks
+  if (noButtonClickCount === 1) {
+    noBtn.innerHTML = '<i class="fas fa-heart-broken"></i> Are you sure?';
   }
-  if (noButtonClickCount === 6) {
-    noBtn.innerHTML = '<i class="fas fa-heart"></i> Think about it?';
+  if (noButtonClickCount === 2) {
+    noBtn.innerHTML = '<i class="fas fa-heart"></i> Last chance!';
   }
 }
 
@@ -312,53 +263,42 @@ function handleYesClick() {
   if (isYesClicked) return;
   isYesClicked = true;
 
-  // Play romantic music if user has interacted
   if (romanticMusic) {
     romanticMusic.volume = 0.2;
     const playPromise = romanticMusic.play();
     if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        // Auto-play was prevented, we'll handle it on user interaction
-      });
+      playPromise.catch(() => {});
     }
   }
 
-  // Create celebration effects
   createConfetti();
 
-  // Add visual feedback
   yesBtn.style.transform = "scale(1.1)";
   yesBtn.style.boxShadow = "0 0 50px rgba(255, 64, 129, 0.8)";
 
-  // Switch to celebration state
   setTimeout(() => {
     questionState.classList.remove("active");
     celebrationState.classList.add("active");
 
-    // Lock body scroll on mobile during celebration
     if (isMobile) {
       body.classList.add("mobile-scroll-lock");
     }
 
-    // Scroll to top of celebration content
     const celebrationContainer = document.querySelector(
-      ".celebration-container",
+      ".celebration-container"
     );
     if (celebrationContainer) {
       celebrationContainer.scrollTop = 0;
     }
 
-    // Add sparkle effect to container
     const container = document.querySelector(".romantic-border");
     container.style.boxShadow =
       "0 20px 80px rgba(255, 64, 129, 0.5), " +
       "0 0 60px rgba(255, 215, 0, 0.4), " +
       "inset 0 0 40px rgba(255, 255, 255, 0.9)";
 
-    // Add floating celebration elements
     createCelebrationHearts();
 
-    // Animate custom image entrance
     if (customImage) {
       customImage.style.animation = "imageFloat 3s ease-in-out infinite";
     }
@@ -394,7 +334,6 @@ function createConfetti() {
 
       document.body.appendChild(confetti);
 
-      // Remove after animation
       setTimeout(() => {
         if (confetti.parentNode) {
           confetti.remove();
@@ -424,7 +363,6 @@ function createCelebrationHearts() {
 
       document.body.appendChild(heart);
 
-      // Remove after animation
       setTimeout(() => {
         if (heart.parentNode) {
           heart.remove();
@@ -433,20 +371,18 @@ function createCelebrationHearts() {
     }, i * 150);
   }
 
-  // Add the animation keyframes if not already present
   if (!document.querySelector("#floatUpAnimation")) {
     const style = document.createElement("style");
     style.id = "floatUpAnimation";
     style.textContent = `
       @keyframes floatUp {
-        0% {
-          transform: translateY(0) rotate(0deg);
-          opacity: 1;
-        }
-        100% {
-          transform: translateY(-100vh) rotate(360deg);
-          opacity: 0;
-        }
+        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+      }
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
       }
     `;
     document.head.appendChild(style);
@@ -458,9 +394,7 @@ function handleVisibilityChange() {
   if (document.hidden && romanticMusic) {
     romanticMusic.pause();
   } else if (!document.hidden && isYesClicked && romanticMusic) {
-    romanticMusic.play().catch(() => {
-      // Ignore auto-play errors
-    });
+    romanticMusic.play().catch(() => {});
   }
 }
 
@@ -490,34 +424,25 @@ let resizeTimeout;
 window.addEventListener("resize", function () {
   clearTimeout(resizeTimeout);
   resizeTimeout = setTimeout(function () {
-    // Reset No button position on resize
-    if (!isMobile && noBtn.classList.contains("desktop-move")) {
-      moveNoButton();
+    if (noBtn.classList.contains("hidden-inside")) {
+      noBtn.classList.remove("hidden-inside");
     }
   }, 250);
 });
 
-// Add touch support for celebration scrolling
-document.addEventListener(
-  "touchstart",
-  function (e) {
-    // Allow touch scrolling in celebration container
-    const celebrationContainer = document.querySelector(
-      ".celebration-container",
-    );
-    if (celebrationContainer && celebrationContainer.contains(e.target)) {
-      e.stopPropagation();
+// Add CSS for hidden-inside class dynamically if not in CSS
+(function addDynamicStyles() {
+  const style = document.createElement("style");
+  style.textContent = `
+    .btn-no.hidden-inside {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: scale(0.5) !important;
+      transition: all 0.3s ease !important;
     }
-  },
-  { passive: true },
-);
-
-// Image loading helper
-function preloadImage(url) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(url);
-    img.onerror = reject;
-    img.src = url;
-  });
-}
+    .btn-no {
+      transition: all 0.3s ease;
+    }
+  `;
+  document.head.appendChild(style);
+})();
