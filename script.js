@@ -16,7 +16,7 @@ let isMobile = false;
 let isYesClicked = false;
 
 const customImageConfig = {
-  imagePath: "./images/kumaran.jpeg",
+  imagePath: "./images/kumaran_1.jpeg",
   fallbackImage:
     "https://images.unsplash.com/photo-1518568814500-bf0f8d125f46?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
 };
